@@ -150,7 +150,7 @@ def calculDamier(a, coup,b, noir, pionsBlancs, pionsNoirs, damesBlanches, damesN
             if noir:
                 chemins = DFSV2.DFS(a,pionsBlancs,pionsNoirs,damesBlanches,damesNoires,"N")
             else:
-                chemins = DFSV2.DFS(a,pionsBlancs,pionsNoirs,damesBlanches,damesNoires,"B")     
+                chemins = DFSV2.DFS(a,pionsBlancs,pionsNoirs,damesBlanches,damesNoires,"B")  
             cheminsPossibles =  []
             cheminRetenu =  []
             if chemins != None:
@@ -160,7 +160,6 @@ def calculDamier(a, coup,b, noir, pionsBlancs, pionsNoirs, damesBlanches, damesN
                         cheminsPossibles.append(chemins[i].copy()) #Choix des chemins arrivant au bon endroit
                 maximum = 0
                 iMax = 0
-                #print(cheminsPossibles)
                 if cheminsPossibles==[]:
                     print("Failed to find any legal path") 
                 else:#debug   
@@ -255,13 +254,13 @@ def verifieValidite(depart, arrivee, coup, noir,pionsBlancs, pionsNoirs, damesBl
                 chemins = testDFS.DFS(depart,pionsNoirs|damesNoires,pionsBlancs,pionsNoirs,damesBlanches,damesNoires,True)  
         else:    
             if noir:
-                chemins = testDFS.DFS(depart,pionsBlancs|damesBlanches,pionsBlancs,pionsNoirs,damesBlanches,damesNoires)
+                chemins = DFSV2.DFS(depart,pionsBlancs,pionsNoirs,damesBlanches,damesNoires, True)
             else:
-                chemins = testDFS.DFS(depart,pionsNoirs|damesNoires,pionsBlancs,pionsNoirs,damesBlanches,damesNoires)  
+                chemins = DFSV2.DFS(depart,pionsBlancs,pionsNoirs,damesBlanches,damesNoires,False)  
         cheminsPossibles =  []
         for i in range(0,len(chemins)): 
-            if chemins[i][1]==arrivee:
-                cheminsPossibles.append([chemins[i][0], chemins[i][2], chemins[i][3]]) #Choix des chemins arrivant au bon endroit
+                if chemins[i][-1][1]==arrivee:
+                    cheminsPossibles.append(chemins[i]) #Choix des chemins arrivant au bon endroit
         maximum = 0
         iMax = 0
         if cheminsPossibles==[]:
