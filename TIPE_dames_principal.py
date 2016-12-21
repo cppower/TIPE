@@ -15,7 +15,7 @@ log = []
 borderMask =  [1,2,3,4,5,6,7,8,9,10]
 cur_arbre = []
 deltaP = [-5,-4,5,6]
-#pairs = [1,2,3,4,5,11,12,13,14,15,21,22,23,24,25,31,32,33,34,35,41,42,43,44,45]
+pairs = [1,2,3,4,5,11,12,13,14,15,21,22,23,24,25,31,32,33,34,35,41,42,43,44,45]
 deltaI = [-6,-5,4,5]
 fZone = [1,2,3,4,5,6,16,26,36,46,47,48,49,50,15,25,35,45]
 borders = [[1,[0,1]],[2,[0,1]], [3,[0,1]],[4,[0,1]],[5,[0,1,3]],[6,[0,2]],[16,[0,2]],[26,[0,2]],[36,[0,2]],[46,[0,2,3]],[47,[2,3]],[48,[2,3]],[49,[2,3]],[50,[2,3]],
@@ -162,34 +162,35 @@ def calculDamier(a, coup,b, noir, pionsBlancs, pionsNoirs, damesBlanches, damesN
                 iMax = 0
                 #print(cheminsPossibles)
                 if cheminsPossibles==[]:
-                    print("Failed to find any legal path") #debug   
-                for i in range(0,len(cheminsPossibles)):
-                    if len(cheminsPossibles[i])>maximum:
-                        maximum = len(cheminsPossibles[i])   #puis choix des plus longs chemins
-                        iMax = i
-                cheminRetenu = [cheminsPossibles[iMax],[]] #param1:  pions pris, param2 : dames prises
-                for (pion,nil) in cheminRetenu[0]: #Cas des pions
+                    print("Failed to find any legal path") 
+                else:#debug   
+                    for i in range(0,len(cheminsPossibles)):
+                        if len(cheminsPossibles[i])>maximum:
+                            maximum = len(cheminsPossibles[i])   #puis choix des plus longs chemins
+                            iMax = i
+                    cheminRetenu = [cheminsPossibles[iMax],[]] #param1:  pions pris, param2 : dames prises
+                    for (pion,nil) in cheminRetenu[0]: #Cas des pions
+                        if noir:
+                            pionsBlancs ^= 2**pion
+                        else:
+                            pionsNoirs ^= 2**pion
                     if noir:
-                        pionsBlancs ^= 2**pion
+                        pionsNoirs ^= 2**a
+                        if b in [47,48,49,50]:
+                            damesNoires ^= 2**b
+                        else:
+                            pionsNoirs ^= 2**b
                     else:
-                        pionsNoirs ^= 2**pion
-                if noir:
-                    pionsNoirs ^= 2**a
-                    if b in [47,48,49,50]:
-                        damesNoires ^= 2**b
-                    else:
-                        pionsNoirs ^= 2**b
-                else:
-                    pionsBlancs ^= 2**a
-                    if b  in [1,2,3,4,5]:
-                        damesBlanches ^= 2**b
-                    else:
-                        pionsBlancs ^= 2**b
-                for dame in range(0,len(cheminRetenu[1])):
-                    if noir:
-                        damesBlanches ^= 2**cheminRetenu[1][dame]
-                    else:
-                        damesNoires ^= 2**cheminRetenu[1][dame] 
+                        pionsBlancs ^= 2**a
+                        if b  in [1,2,3,4,5]:
+                            damesBlanches ^= 2**b
+                        else:
+                            pionsBlancs ^= 2**b
+                    for dame in range(0,len(cheminRetenu[1])):
+                        if noir:
+                            damesBlanches ^= 2**cheminRetenu[1][dame]
+                        else:
+                            damesNoires ^= 2**cheminRetenu[1][dame] 
         else:
                 #Cas d'une rafle avec dame
             if noir:
@@ -384,7 +385,7 @@ n = False
 while(True):
     valeurs = {}
     debut = time()
-    arbre = creeArbre(n,pB, pN, dB, dN)
+    arbre = creeArbre(False,pB, pN, dB, dN)
     inter = time()
     best_move=0
     best_value=-INFINI   
@@ -396,14 +397,14 @@ while(True):
             best_value=i
             best_move=k            
     prochain_coup(arbre, best_move)
-    log.append(str(arbre[best_move][1])+arbre[best_move][2]+str(arbre[best_move][3])
-    pB,pN,dB,dN=calculDamier(arbre[best_move][1],arbre[best_move][2],arbre[best_move][3],n, pB,pN, dB,dN)
-    #affichageGUI(pB,pN,dB,dN)
+    log.append(str(arbre[best_move][1])+arbre[best_move][2]+str(arbre[best_move][3]))
+    pB,pN,dB,dN=calculDamier(arbre[best_move][1],arbre[best_move][2],arbre[best_move][3],False, pB,pN, dB,dN)
+    affichageGUI(pB,pN,dB,dN)
     #afficheListeCoups(arbre)
     a = int(input())
     c =input()
     b = int(input())
     print("L'adversaire joue : "+str(a)+c+str(b)) 
-    pB,pN,dB,dN=calculDamier(a,c,b,not n, pB,pN,dB,dN)
-    #affichageGUI(pB,pN,dB,dN)
+    pB,pN,dB,dN=calculDamier(a,c,b,True, pB,pN,dB,dN)
+    affichageGUI(pB,pN,dB,dN)
     print(pB)
