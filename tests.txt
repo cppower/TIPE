@@ -1,0 +1,3 @@
+pB = 
+pN = 1<<25 
+COUP ATTENDU : 
