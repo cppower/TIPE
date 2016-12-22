@@ -147,49 +147,52 @@ def calculDamier(a, coup,b, noir, pionsBlancs, pionsNoirs, damesBlanches, damesN
             damesBlanches ^=2**b            
     else:
         if not dame:
-            if noir:
-                chemins = DFSV2.DFS(a,pionsBlancs,pionsNoirs,damesBlanches,damesNoires,"N")
-            else:
-                chemins = DFSV2.DFS(a,pionsBlancs,pionsNoirs,damesBlanches,damesNoires,"B")  
-            cheminsPossibles =  []
-            cheminRetenu =  []
-            if chemins != None:
-                #print(chemins)
+            if not dame:
+                if noir:
+                    chemins = testDFS.DFS(a,pionsBlancs|damesBlanches,pionsBlancs,pionsNoirs,damesBlanches,damesNoires)
+                else:
+                    chemins = testDFS.DFS(a,pionsNoirs|damesNoires,pionsBlancs,pionsNoirs,damesBlanches,damesNoires)     
+                cheminsPossibles =  []
+                cheminRetenu =  []
+                print(chemins)
                 for i in range(0,len(chemins)): 
-                    if chemins[i][-1][1]==b:
-                        cheminsPossibles.append(chemins[i].copy()) #Choix des chemins arrivant au bon endroit
+                    if chemins[i][1]==b:
+                        cheminsPossibles.append([chemins[i][0], chemins[i][2], chemins[i][3]]) #Choix des chemins arrivant au bon endroit
                 maximum = 0
                 iMax = 0
                 if cheminsPossibles==[]:
-                    print("Failed to find any legal path") 
-                else:#debug   
-                    for i in range(0,len(cheminsPossibles)):
-                        if len(cheminsPossibles[i])>maximum:
-                            maximum = len(cheminsPossibles[i])   #puis choix des plus longs chemins
-                            iMax = i
-                    cheminRetenu = [cheminsPossibles[iMax],[]] #param1:  pions pris, param2 : dames prises
-                    for (pion,nil) in cheminRetenu[0]: #Cas des pions
-                        if noir:
-                            pionsBlancs ^= 2**pion
-                        else:
-                            pionsNoirs ^= 2**pion
+                    print("Failed to find any legal path") #debug   
+                for i in range(0,len(cheminsPossibles)):
+                    if cheminsPossibles[i][0]>maximum:
+                        maximum = cheminsPossibles[i][0]    #puis choix des plus longs chemins
+                        iMax = i
+                cheminRetenu = [cheminsPossibles[iMax][1], cheminsPossibles[iMax][2]] #param1:  pions pris, param2 : dames prises
+                for pion in range(0,len(cheminRetenu[0])): #Cas des pions
                     if noir:
-                        pionsNoirs ^= 2**a
-                        if b in [47,48,49,50]:
-                            damesNoires ^= 2**b
-                        else:
-                            pionsNoirs ^= 2**b
+                        #print("pion :")
+                        print(cheminRetenu[0][pion])
+                        pionsBlancs ^= 2**cheminRetenu[0][pion]
                     else:
-                        pionsBlancs ^= 2**a
-                        if b  in [1,2,3,4,5]:
-                            damesBlanches ^= 2**b
-                        else:
-                            pionsBlancs ^= 2**b
-                    for dame in range(0,len(cheminRetenu[1])):
-                        if noir:
-                            damesBlanches ^= 2**cheminRetenu[1][dame]
-                        else:
-                            damesNoires ^= 2**cheminRetenu[1][dame] 
+                        #print("pion : ")
+                        print(cheminRetenu[0][pion])
+                        pionsNoirs ^= 2**cheminRetenu[0][pion]
+                if noir:
+                    pionsNoirs ^= 2**a
+                    if b in [47,48,49,50]:
+                        damesNoires ^= 2**b
+                    else:
+                        pionsNoirs ^= 2**b
+                else:
+                    pionsBlancs ^= 2**a
+                    if b  in [1,2,3,4,5]:
+                        damesBlanches ^= 2**b
+                    else:
+                        pionsBlancs ^= 2**b
+                for dame in range(0,len(cheminRetenu[1])):
+                    if noir:
+                        damesBlanches ^= 2**cheminRetenu[1][dame]
+                    else:
+                        damesNoires ^= 2**cheminRetenu[1][dame] 
         else:
                 #Cas d'une rafle avec dame
             if noir:
@@ -231,7 +234,7 @@ def calculDamier(a, coup,b, noir, pionsBlancs, pionsNoirs, damesBlanches, damesN
                     else:
                         damesNoires ^= 2**cheminRetenu[1][dam] 
     return (pionsBlancs, pionsNoirs, damesBlanches, damesNoires)
-def verifieValidite(depart, arrivee, coup, noir,pionsBlancs, pionsNoirs, damesBlanches, damesNoires): 
+def verifieValidite(depart, arrivee, coup, noir,pionsBlancs, pionsNoirs, damesBlanches, damesNoires): #TO DO FIX VALIDATION CAPTURE
     if coup=='-':
         if (damesBlanches>>depart)%2==0 or (damesNoires>>depart)%2==0:  #pas un mouvement de dames
             if (occupee(pionsBlancs,pionsNoirs,damesBlanches,damesNoires)>>arrivee)%2==0:
@@ -254,18 +257,18 @@ def verifieValidite(depart, arrivee, coup, noir,pionsBlancs, pionsNoirs, damesBl
                 chemins = testDFS.DFS(depart,pionsNoirs|damesNoires,pionsBlancs,pionsNoirs,damesBlanches,damesNoires,True)  
         else:    
             if noir:
-                chemins = DFSV2.DFS(depart,pionsBlancs,pionsNoirs,damesBlanches,damesNoires, True)
+                chemins = testDFS.DFS(depart,pionsBlancs|damesBlanches,pionsBlancs,pionsNoirs,damesBlanches,damesNoires)
             else:
-                chemins = DFSV2.DFS(depart,pionsBlancs,pionsNoirs,damesBlanches,damesNoires,False)  
-        cheminsPossibles =  []
-        for i in range(0,len(chemins)): 
-                if chemins[i][-1][1]==arrivee:
-                    cheminsPossibles.append(chemins[i]) #Choix des chemins arrivant au bon endroit
-        maximum = 0
-        iMax = 0
-        if cheminsPossibles==[]:
-            return False  
-        return True
+                chemins = testDFS.DFS(depart,pionsNoirs|damesNoires,pionsBlancs,pionsNoirs,damesBlanches,damesNoires)  
+            cheminsPossibles =  []
+            for i in range(0,len(chemins)): 
+                if chemins[i][1]==arrivee:
+                   cheminsPossibles.append([chemins[i][0], chemins[i][2], chemins[i][3]]) #Choix des chemins arrivant au bon endroit
+            maximum = 0
+            iMax = 0
+            if cheminsPossibles==[]:
+                return False  
+            return True
         '''
         else: #déplacement simple d'une dame
 
