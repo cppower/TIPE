@@ -5,7 +5,7 @@ deltaI = [-6,-5,4,5]
 lSide = [6,16,26,36,46]
 rSide = [5,15,25,35,45]
 uSide = [1,2,3,4,5]
-fZone = [1,2,3,4,5,6,16,26,36,46,47,48,49,50,15,25,35,45]
+fZone2 = [1,2,3,4,5,6,16,26,36,46,47,48,49,50,15,25,35,45]
 borders = [[1,[0,1]],[2,[0,1]], [3,[0,1]],[4,[0,1]],[5,[0,1,3]],[6,[0,2]],[16,[0,2]],[26,[0,2]],[36,[0,2]],[46,[0,2,3]],[47,[2,3]],[48,[2,3]],[49,[2,3]],[50,[2,3]],
 [15,[1,3]],[25,[1,3]],[35,[1,3]],[45,[1,3]]]
 tmp=0
@@ -40,6 +40,7 @@ def affichage(pionsBlancs,pionsNoirs,damesBlanches,damesNoires):
             print((b>>(i+k))%2-(a>>(i+k))%2, end='   ')
         print("")
 def DFSrec(noeud,piecesAdv,pionsBlancs, pionsNoirs, damesBlanches,damesNoires, dame=False): #Prise d'un pion todo : s'assurer que le premier déplacement est dans le sens de la marche
+    #print("Appel :"+str(noeud))
     global tmp   
     global pionsPris
     global targets
@@ -55,17 +56,20 @@ def DFSrec(noeud,piecesAdv,pionsBlancs, pionsNoirs, damesBlanches,damesNoires, d
         #print(chemins)
         if dame:
             for iDir in range(0,4):
-                if iDir==prev:
-                    iDir+=1
+#                if iDir==prev:
+                #    iDir+=1
                 if iDir==4:
                     break
-                target = -1 #      CORRIGER LES DEPASSEMENTS SUR LES BORDS !
+                #print("Direction : "+str(iDir))
+                target = -1                  #      CORRIGER LES DEPASSEMENTS SUR LES BORDS !
                 dest=noeud
                 first = True
                 last=False
-                while first or (not last and dest<=50 and dest>=1 and dest not in lSide and dest not in rSide):
+                while first or (not last and dest<=50 and dest>=1 and dest not in lSide and dest not in rSide) :
                     #print(dest)
-                    if dest in fZone and iDir in borders[fZone.index(dest)][1]:
+                    if not first and ((piecesAdv == pionsBlancs|damesBlanches and ((pionsNoirs|damesNoires)>>dest)%2!=0) or (piecesAdv == pionsNoirs|damesNoires and ((pionsBlancs|damesBlanches)>>dest)%2!=0)):
+                        break   
+                    if dest in fZone2 and iDir in borders[fZone2.index(dest)][1]:
                         last=True
                     if   (piecesAdv>>dest)%2==1:#piece ennemie localise
                         target = dest
@@ -94,7 +98,7 @@ def DFSrec(noeud,piecesAdv,pionsBlancs, pionsNoirs, damesBlanches,damesNoires, d
                         if dest>=1 and dest<=50 and (occupee(pionsBlancs, pionsNoirs, damesBlanches, damesNoires)>>dest)%2==0:
                             #print("Current destination : "+str(dest))
                             tab+=" "
-                            tmp ^= 2**(dest)
+                            tmp ^=(1<<dest)
                             if ((pionsBlancs|pionsNoirs)>>(target))%2==1:
                                 ennPion=True
                                 pionsPris.append(target)
@@ -104,7 +108,7 @@ def DFSrec(noeud,piecesAdv,pionsBlancs, pionsNoirs, damesBlanches,damesNoires, d
                             chemins.append([len(pionsPris)+len(damesPrises),dest,pionsPris.copy(),damesPrises.copy()]) #a remplacer le [] par damesPrises
                             prev=iDir
                             DFSrec(dest, piecesAdv, pionsBlancs, pionsNoirs, damesBlanches, damesNoires, True)
-                            tmp ^= 2**(dest)
+                            tmp ^= (1<<dest)
                             if ennPion:
                                 pionsPris.pop()
                             elif ennDame:
@@ -126,27 +130,26 @@ def DFSrec(noeud,piecesAdv,pionsBlancs, pionsNoirs, damesBlanches,damesNoires, d
                 ennPion=False
                 ennDame=False
                 if noeud+d1+d2<=50 and noeud+d1+d2>=1 and noeud+d2 not in lSide and noeud+d2 not in rSide and (piecesAdv | 2**(noeud+d2) == piecesAdv):
-                    if noeud in borders and i  in borders[fZone.index(noeud)][1]:
-                        break
+                    if noeud not in fZone2 or (noeud in fZone2 and i not in borders[fZone2.index(noeud)][1]):
                     #print(str(noeud+d1+d2))
                     #affichage(pionsBlancs,pionsNoirs,damesBlanches,damesNoires)
-                    if ((occupee(pionsBlancs,pionsNoirs,damesBlanches,damesNoires) >>(noeud+d1+d2))%2== 0):
-                        tab+=" "
-                        tmp ^= 2**(noeud+d1+d2)
-                        if ((pionsBlancs|pionsNoirs)>>(noeud+d2))%2==1:
-                            ennPion=True
-                            pionsPris.append(noeud+d2)
-                        elif ((damesBlanches|damesNoires)>>(noeud+d2))%2==1:
-                            ennDame=True
-                            damesPrises.append(noeud+d2)
-                        chemins.append([len(pionsPris)+len(damesPrises),noeud+d1+d2,pionsPris.copy(),damesPrises.copy()]) #a remplacer le [] par damesPrises
-                        DFSrec(noeud+d1+d2, piecesAdv,pionsBlancs, pionsNoirs, damesBlanches,damesNoires)
-                        tmp^= 2**(noeud+d1+d2)
-                        if ennPion:
-                            pionsPris.pop()
-                        elif ennDame:
-                            damesPrises.pop()
-            tab = tab[0:len(tab)-2]
+                        if ((occupee(pionsBlancs,pionsNoirs,damesBlanches,damesNoires) >>(noeud+d1+d2))%2== 0):
+                            tab+=" "
+                            tmp ^= 2**(noeud+d1+d2)
+                            if ((pionsBlancs|pionsNoirs)>>(noeud+d2))%2==1:
+                                ennPion=True
+                                pionsPris.append(noeud+d2)
+                            elif ((damesBlanches|damesNoires)>>(noeud+d2))%2==1:
+                                ennDame=True
+                                damesPrises.append(noeud+d2)
+                            chemins.append([len(pionsPris)+len(damesPrises),noeud+d1+d2,pionsPris.copy(),damesPrises.copy()]) #a remplacer le [] par damesPrises
+                            DFSrec(noeud+d1+d2, piecesAdv,pionsBlancs, pionsNoirs, damesBlanches,damesNoires)
+                            tmp^= 2**(noeud+d1+d2)
+                            if ennPion:
+                                pionsPris.pop()
+                            elif ennDame:
+                                damesPrises.pop()
+                tab = tab[0:len(tab)-2]
         #print(pionsPris)
 
         return chemins
