@@ -119,6 +119,7 @@ def minimaxAB(profondeur,nodeId, arbre,alpha,beta,color): #Effectue l'algo minim
     return val
 def calculDamier(a, coup,b, noir, pionsBlancs, pionsNoirs, damesBlanches, damesNoires):
     dame = False
+    p=0
     if (noir and (damesNoires>>a)%2==1) or  (not noir and (damesBlanches>>a)%2==1): #Vérifie si la case de départ est occupée par une dame
         #print("Dame")
         dame = True 
@@ -154,6 +155,7 @@ def calculDamier(a, coup,b, noir, pionsBlancs, pionsNoirs, damesBlanches, damesN
                     chemins = testDFS.DFS(a,pionsNoirs|damesNoires,pionsBlancs,pionsNoirs,damesBlanches,damesNoires)     
                 cheminsPossibles =  []
                 cheminRetenu =  []
+                print("--------")
                 print(chemins)
                 for i in range(0,len(chemins)): 
                     if chemins[i][1]==b:
@@ -166,7 +168,8 @@ def calculDamier(a, coup,b, noir, pionsBlancs, pionsNoirs, damesBlanches, damesN
                     if cheminsPossibles[i][0]>maximum:
                         maximum = cheminsPossibles[i][0]    #puis choix des plus longs chemins
                         iMax = i
-                cheminRetenu = [cheminsPossibles[iMax][1], cheminsPossibles[iMax][2]] #param1:  pions pris, param2 : dames prises
+                cheminRetenu = [cheminsPossibles[iMax][1], cheminsPossibles[iMax][2]] #param1:  pions pris, param2 : dames prises         
+                print(cheminRetenu)
                 for pion in range(0,len(cheminRetenu[0])): #Cas des pions
                     if noir:
                         #print("pion :")
@@ -214,7 +217,9 @@ def calculDamier(a, coup,b, noir, pionsBlancs, pionsNoirs, damesBlanches, damesN
                     if cheminsPossibles[i][0]>maximum:
                         maximum = cheminsPossibles[i][0]    #puis choix des plus longs chemins
                         iMax = i
-                cheminRetenu = [cheminsPossibles[iMax][1], cheminsPossibles[iMax][2]] #param1:  pions pris, param2 : dames prises
+                cheminRetenu = [cheminsPossibles[iMax][1], cheminsPossibles[iMax][2]] 
+                p = len(cheminRetenu[0])+len(cheminRetenu[1])#param1:  pions pris, param2 : dames prises
+                print(p)
                 for pion in range(0,len(cheminRetenu[0])): #Cas des pions
                     if noir:
                         print(cheminRetenu[0][pion])
@@ -233,7 +238,7 @@ def calculDamier(a, coup,b, noir, pionsBlancs, pionsNoirs, damesBlanches, damesN
                         damesBlanches ^= 2**cheminRetenu[1][dam]
                     else:
                         damesNoires ^= 2**cheminRetenu[1][dam] 
-    return (pionsBlancs, pionsNoirs, damesBlanches, damesNoires)
+    return (pionsBlancs, pionsNoirs, damesBlanches, damesNoires,p)
 def verifieValidite(depart, arrivee, coup, noir,pionsBlancs, pionsNoirs, damesBlanches, damesNoires): #TO DO FIX VALIDATION CAPTURE
     if coup=='-':
         if (damesBlanches>>depart)%2==0 or (damesNoires>>depart)%2==0:  #pas un mouvement de dames
@@ -302,7 +307,7 @@ def verifieValidite(depart, arrivee, coup, noir,pionsBlancs, pionsNoirs, damesBl
     '''
 def ajouteCoup(dep,arr,coup,noir, pionsBlancs,pionsNoirs, damesBlanches,damesNoires,network=None): #Ajoute un coup valide à l'arbre
     global cur_arbre
-    (pionsBlancs, pionsNoirs, damesBlanches, damesNoires)= calculDamier(dep,coup,arr,noir,pionsBlancs, pionsNoirs, damesBlanches, damesNoires)
+    (pionsBlancs, pionsNoirs, damesBlanches, damesNoires)= calculDamier(dep,coup,arr,noir,pionsBlancs, pionsNoirs, damesBlanches, damesNoires)[0:4]
     #evaly    = evaluation(pionsBlancs|damesBlanches,pionsNoirs|damesNoires,noir)
     #evaly = reseauNeurones.evalue(network,pionsBlancs, pionsNoirs, damesBlanches, damesNoires,noir)*2-1 #Normalement l'éval vient d'un réseau de neurones...
     evalB = evaluation_simple(pionsBlancs,pionsNoirs, damesBlanches, damesNoires,noir)
@@ -313,6 +318,7 @@ def deplacePieceP(dep,noir,pionsBlancs, pionsNoirs, damesBlanches,damesNoires): 
 #Complexité à améliorer...
     global cur_arbre
     prise = False
+    best = 0
     for i in range(1,51):
             if i!=dep:
                 if verifieValidite(dep,i,'x',noir,pionsBlancs,pionsNoirs, damesBlanches, damesNoires):
@@ -390,23 +396,36 @@ while(True):
     arbre = creeArbre(False,pB, pN, dB, dN)
     inter = time()
     best_move=0
-    best_value=-INFINI   
-    print(minimaxAB(0,0,arbre,-INFINI,INFINI,1))
+    best_value=-INFINI 
+    tmp=0
+    for i in range(1,profondeurs[1]+1):
+        tmp = max(tmp, calculDamier(arbre[ids[i]][1],arbre[ids[i]][2],arbre[ids[i]][3],False,pB,pN, dB,dN)[4])
+    if tmp==0: #Capture prioritaire
+        print("Pas de prise")
+        minimaxAB(0,0,arbre,-INFINI,INFINI,1)
+        for (k,v) in valeurs.items():
+            if v>=best_value:
+                best_value=v
+                best_move=k     
+        print(best_value)
+    else:
+        nxtCoup = 0
+        for i in range(1, profondeurs[1]+1):
+            curA = arbre[ids[i]]
+            if curA[2]=="x" and calculDamier(curA[1],curA[2],curA[3],False,pB,pN, dB,dN)[4]>best:
+                best= calculDamier(curA[1],curA[2],curA[3],False,pB,pN, dB,dN)[4]
+                nxtCoup = ids[i]
     fin=time()
     print(str(fin-debut)+" secondes")
-    for (k,v) in valeurs.items():
-        if v>=best_value:
-            best_value=i
-            best_move=k            
     prochain_coup(arbre, best_move)
     log.append(str(arbre[best_move][1])+arbre[best_move][2]+str(arbre[best_move][3]))
-    pB,pN,dB,dN=calculDamier(arbre[best_move][1],arbre[best_move][2],arbre[best_move][3],False, pB,pN, dB,dN)
+    pB,pN,dB,dN,p=calculDamier(arbre[best_move][1],arbre[best_move][2],arbre[best_move][3],False, pB,pN, dB,dN)
     affichageGUI(pB,pN,dB,dN)
     #afficheListeCoups(arbre)
     a = int(input())
     c =input()
     b = int(input())
     print("L'adversaire joue : "+str(a)+c+str(b)) 
-    pB,pN,dB,dN=calculDamier(a,c,b,True, pB,pN,dB,dN)
+    pB,pN,dB,dN,p=calculDamier(a,c,b,True, pB,pN,dB,dN)
     affichageGUI(pB,pN,dB,dN)
     print(pB)

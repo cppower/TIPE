@@ -19,7 +19,7 @@ d2 =  [-6,-5,4,5]
 fZone = [1     ,2    , 3   ,4    ,5  ,46  ,  47  ,48    ,49   ,50   ,6   ,16    ,26   ,36    ,15    ,25  ,35  ,45]
 vMove = [[5,6],[5,6],[5,6],[5,6],[5],[-5],[-5,-6],[-5,-6],[-5,-6],[-5,-6],[-5,5],[-5,5],[-5,5],[-5,5],[-5,5],[-5,5],[-5,5],[-5,5]]
 arbre = []
-© Victor Amblard
+#© Victor Amblard
 history={}
 
 def minimaxAB(profondeur,nodeId, arbre,alpha,beta,color): #Effectue l'algo minimax + elagage AB  FONCTIONNE CORRECTEMENT
@@ -36,7 +36,7 @@ def minimaxAB(profondeur,nodeId, arbre,alpha,beta,color): #Effectue l'algo minim
                 val =v
             alpha = max(alpha, v)
             if alpha>=beta:
-				pass
+				break
     if profondeur==1:
         valeurs[nodeId]=val
     return val
@@ -67,7 +67,7 @@ def evalue(plateau, noir): #Function complete
 
 def explore(plateau,noir): #Function complete
 	CAPTURE=False
-	for i in range(0,51):
+	for i in range(1,51):
 		if (noir and ((plateau.pionsNoirs|plateau.damesNoires)>>i)%2==1) or (not noir and ((plateau.pionsBlancs|plateau.damesBlanches)>>i)%2==1):
 			CAPTURE = CAPTURE | prisesPossibles(i,plateau,noir)
 
@@ -84,9 +84,9 @@ def prisesPossibles(origine, plateau, noir):
 	if (not noir and (plateau.damesBlanches>>origine)%2==1) or (noir and (plateau.damesNoires>>origine)%2==1):
 		dame = True
 	if noir:
-    	chemins = testDFS.DFS(origine,plateau.pionsBlancs|plateau.damesBlanches,plateau.pionsBlancs,plateau.pionsNoirs,plateau.damesBlanches,plateau.damesNoires)
+    	chemins = testDFS.DFS(origine,plateau.pionsBlancs|plateau.damesBlanches,plateau.pionsBlancs,plateau.pionsNoirs,plateau.damesBlanches,plateau.damesNoires,dame)
 	else:
-    	chemins = testDFS.DFS(origine,plateau.pionsNoirs|plateau.damesNoires,plateau.pionsBlancs,plateau.pionsNoirs,plateau.damesBlanches,plateau.damesNoires)     
+    	chemins = testDFS.DFS(origine,plateau.pionsNoirs|plateau.damesNoires,plateau.pionsBlancs,plateau.pionsNoirs,plateau.damesBlanches,plateau.damesNoires,dame)     
 	if chemins != []:
     	cheminRetenu =  []
     	maximum = 0
@@ -113,9 +113,6 @@ def deplacementsPossibles(origine, plateau, noir): #Function complete
 		dame = False
 		if (not noir and (dB>>origine)%2==1) or (noir and (dN>>origine)%2==1):
 			dame = True
-		if dame:
-			print(dB)
-			print(dN)
 		if not dame:
 			if origine in cat1:
 				for deplacement in d1:
@@ -123,16 +120,16 @@ def deplacementsPossibles(origine, plateau, noir): #Function complete
 					if ((origine not in fZone) or (origine in fZone and deplacement in vMove[fZone.index(origine)])) and arrivee>=0 and arrivee<=50:
 						if ((pB|pN|dB|dN)>>arrivee)%2==0:
 							if (noir and arrivee-origine>0) or (not noir and arrivee-origine<0):
-								nPlateau = modifieDamier(origine, "-",arrivee, plateau, noir,False)
-								arbre.append((origine, "-",arrivee, nPlateau,noir, 0, evalue(nPlateau, noir)))
+								nplat = modifieDamier(origine, "-",arrivee, plateau, noir,False)
+								arbre.append((origine, "-",arrivee, nplat,noir, 0, evalue(nplat, noir)))
 			else:
 				for deplacement in d2:
 					arrivee=origine+deplacement
 					if ((origine not in fZone) or (origine in fZone and deplacement in vMove[fZone.index(origine)])) and arrivee>=0 and arrivee<=50:
 						if ((pB|pN|dB|dN)>>arrivee)%2==0:
 							if (noir and arrivee-origine>0) or (not noir and arrivee-origine<0):
-								nPlateau = modifieDamier(origine, "-",arrivee, plateau, noir,False)
-								arbre.append((origine, "-", arrivee, nPlateau, noir, 0, evalue(nPlateau, noir)))
+								nplat = modifieDamier(origine, "-",arrivee, plateau, noir,False)
+								arbre.append((origine, "-", arrivee, nplat, noir, 0, evalue(nplat, noir)))
 
 		else:
 			for i in range(0,4):
@@ -141,11 +138,12 @@ def deplacementsPossibles(origine, plateau, noir): #Function complete
 					deplacement = d1[i]
 				else:
 					deplacement = d2[i]
-				while (cur not in fZone) or (cur in fZone and deplacement in vMove[fZone.index(cur)]) and cur>=0 and cur<=50:
-					if cur != origine:
-						#print(cur)
-						nPlateau = modifieDamier (origine,  "-",cur,plateau, noir, True)
-						arbre.append((origine, "-", cur, nPlateau, noir, 0, evalue(nPlateau, noir)))
+				while (cur not in fZone) or (cur in fZone and deplacement in vMove[fZone.index(cur)]) and cur+deplacement>=0 and cur+deplacement<=50:
+					if ((pB|pN|dB|dN)>>(cur+deplacement))%2!=0:
+						break
+					#print(str(cur+deplacement)+" "+str(i))
+					nplat = modifieDamier (origine,  "-",cur+deplacement,plateau, noir, True)
+					arbre.append((origine, "-", cur+deplacement, nplat, noir, 0, evalue(nplat, noir)))
 					if cur in cat1:
 						deplacement = d2[i]
 						cur += d1[i]
@@ -194,8 +192,8 @@ def modifieDamier(origine, coup, arrivee, plateau, noir, dame, chemin = None): #
 				nDN ^= (1<<dam)
 
 
-	nPlateau =  Plateau(nPB,nPN,nDB, nDN)
-	return nPlateau
+	npla =  Plateau(nPB,nPN,nDB, nDN)
+	return npla
 
 def highestPriority(plateau):
 	global arbreTotal
@@ -204,9 +202,9 @@ def highestPriority(plateau):
 	for i in range(0,profondeurs[1]):
 		element = arbreTotal[ids[i+1]]
 		if element[2]=='x':
-			if element[-1]>maxi:
+			if element[-2]>maxi:
 				iMaxi=ids[i+1]
-				maxi=element[-1]
+				maxi=element[-2]
 	if maxi != -INFINI:
 		return iMaxi
 	else:
@@ -279,27 +277,75 @@ def creeArbre(noir, plateau):
 		    		arbreTotal[newId] = (id,)+elem
 
 	return arbre
-
-#plateau =  Plateau()
+iPartie=0
+blancs = 0
+noirs = 0
 while(True):
-	arbreTotal =  {}
-	priority = 0
-	valeurs  ={}
-	history={}
-	#explore(plateau, False)
-	debut = time()
-	creeArbre(False, plateau)
-	bestMove = highestPriority(plateau)
-	#print(valeurs)
-	fin =time()
-	print("Coup choisi : "+str(arbreTotal[bestMove][1])+arbreTotal[bestMove][2]+str(arbreTotal[bestMove][3])+" en "+str(fin-debut)+" secondes")
-	if bestMove == -1 :
-		break
-	nPlateau = arbreTotal[bestMove][4] # plateau
-	# UTILISATEUR #
-	arbre = []
-	priority = 0
-	a = int(input())
-	b = input()
-	c = int(input())
-	plateau = joueHumain(a,b,c,nPlateau,True)
+	initial = time()
+	plateau =  Plateau()
+	turn = 1
+	
+	log = open('fichier_log_'+str(iPartie)+'.pdn', 'w')
+	log.write('[White "IA 1"]\n[Black "IA 1"]')
+	logWDetails = open('fichier_log_details_'+str(iPartie)+'.txt', 'w')
+	logWDetails.write("Compte rendu de la partie n° "+str(iPartie)+"\n\n")
+	
+	end = False
+	while(True) and turn <200:
+		log.write(str(turn)+".")
+		arbreTotal =  {}
+		priority = 0
+		valeurs  ={}
+		history={}
+		#explore(plateau, False)
+		debut = time()
+		creeArbre(False, plateau)
+		bestMove = highestPriority(plateau)
+		#print(valeurs)
+		fin =time()
+		if plateau.pionsBlancs|plateau.damesBlanches==0:
+			noirs+=1
+			break
+		print("Coup choisi : "+str(arbreTotal[bestMove][1])+arbreTotal[bestMove][2]+str(arbreTotal[bestMove][3])+" en "+str(fin-debut)+" secondes")
+		log.write(str(arbreTotal[bestMove][1])+arbreTotal[bestMove][2]+str(arbreTotal[bestMove][3])+" ")
+		logWDetails.write(str(arbreTotal[bestMove][1])+arbreTotal[bestMove][2]+str(arbreTotal[bestMove][3])+" ")
+		logWDetails.write(str(arbreTotal[bestMove][4].pionsBlancs)+" ")
+		logWDetails.write(str(arbreTotal[bestMove][4].pionsNoirs)+" ")
+		logWDetails.write(str(arbreTotal[bestMove][4].damesBlanches)+" ")
+		logWDetails.write(str(arbreTotal[bestMove][4].damesNoires)+" ")
+		logWDetails.write("\n")
+		
+	
+		nPlateau = arbreTotal[bestMove][4] # plateau
+		# UTILISATEUR #
+		debut = time()
+		arbre = []
+		arbreTotal =  {}
+		priority = 0
+		valeurs  ={}
+		history={}
+		priority = 0
+		creeArbre(True, nPlateau)
+		bestMove = highestPriority(nPlateau)
+		fin =time()
+		if nPlateau.pionsNoirs|nPlateau.damesNoires==0:
+			blancs+=1
+			break
+		print("Coup choisi : "+str(arbreTotal[bestMove][1])+arbreTotal[bestMove][2]+str(arbreTotal[bestMove][3])+" en "+str(fin-debut)+" secondes")
+		plateau = arbreTotal[bestMove][4] # plateau
+		log.write(str(arbreTotal[bestMove][1])+arbreTotal[bestMove][2]+str(arbreTotal[bestMove][3])+" ")
+		logWDetails.write(str(arbreTotal[bestMove][1])+arbreTotal[bestMove][2]+str(arbreTotal[bestMove][3])+" ")
+		logWDetails.write(str(arbreTotal[bestMove][4].pionsBlancs)+" ")
+		logWDetails.write(str(arbreTotal[bestMove][4].pionsNoirs)+" ")
+		logWDetails.write(str(arbreTotal[bestMove][4].damesBlanches)+" ")
+		logWDetails.write(str(arbreTotal[bestMove][4].damesNoires)+" ")
+		logWDetails.write("\n")
+		turn+=1
+	final=time()
+	logWDetails.write("------------------\n\n\n")
+	logWDetails.write("Durée de la partie : "+str(final-initial)+" secondes ")
+	logWDetails.write("Temps moyen par coup :"+str((final-initial)/(2*turn))+" secondes")
+	log.close()
+	logWDetails.close()
+	iPartie+=1
+		#affichageGUI(plateau.pionsBlancs,plateau.pionsNoirs,plateau.damesBlanches, plateau.damesNoires)
