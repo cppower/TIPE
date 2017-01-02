@@ -66,14 +66,15 @@ def DFSrec(noeud,piecesAdv,pionsBlancs, pionsNoirs, damesBlanches,damesNoires, d
                 first = True
                 last=False
                 while first or (not last and dest<=50 and dest>=1 and dest not in lSide and dest not in rSide) :
-                    #print(dest)
                     if not first and ((piecesAdv == pionsBlancs|damesBlanches and ((pionsNoirs|damesNoires)>>dest)%2!=0) or (piecesAdv == pionsNoirs|damesNoires and ((pionsBlancs|damesBlanches)>>dest)%2!=0)):
-                        break   
+                        break 
+
                     if dest in fZone2 and iDir in borders[fZone2.index(dest)][1]:
                         last=True
                     if   (piecesAdv>>dest)%2==1:#piece ennemie localise
                         target = dest
                         break
+
                     else:
                         if dest in pairs:
                             d1 = deltaP[iDir]
@@ -115,6 +116,7 @@ def DFSrec(noeud,piecesAdv,pionsBlancs, pionsNoirs, damesBlanches,damesNoires, d
                                 damesPrises.pop()
                         else:
                             break
+                    targets.remove(target)
                 tab = tab[0:len(tab)-2]
             #print(pionsPris)
             return chemins          
