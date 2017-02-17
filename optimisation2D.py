@@ -11,8 +11,8 @@ import os
 
 from time import time
 os.chdir("/Users/Victor/Dames")
-eta=0.3
-alpha=0.2
+eta=0.5
+alpha=0
 def transform(l):
     tmp = l
     pB,pN,dB, reste = tmp.split(":")
@@ -24,7 +24,7 @@ def convertToArray():
     count=0
     file = open('bdd.txt','r')
     lines = file.readlines()
-    X=np.zeros((len(lines),12))
+    X=np.zeros((len(lines),2))
     Y =np.zeros(len(lines))
     print(len(lines))
     j=0
@@ -45,12 +45,12 @@ def convertToArray():
             elif (dN>>i)%2==1:
                 totalN2+=1
         if couleur==1:
-            X[j,10]=totalN-totalB
-            X[j,11]=totalN2-totalB2
+            X[j,0]=totalN-totalB
+            X[j,1]=totalN2-totalB2
         else:
-            X[j,10]=totalB-totalN
-            X[j,11]=totalB2-totalN2
-    
+            X[j,0]=totalB-totalN
+            X[j,1]=totalB2-totalN2
+        '''
         for i in range(0,10): #lignes
             m=0
             for k in range(0,5):
@@ -103,7 +103,7 @@ X,Y = convertToArray()
 
 class Neural_Network(object):
     def __init__(self):        
-        self.inputLayerSize = 12
+        self.inputLayerSize = 2
         self.outputLayerSize = 1
         #Poids Input->Output
         self.W1 = np.random.randn(self.inputLayerSize,self.outputLayerSize)
@@ -176,6 +176,7 @@ class trainer(object):
         archivesX=[]
         archivesY = []
         for L in range(0,iter):
+            X = np.random.permutation(X)
             if L==int(iter/100*2):
                 fin = time()
                 diff=round((fin-debut)/2*100,1)
@@ -201,18 +202,19 @@ class trainer(object):
                     prev[i]=tmpW1[i]/lBatch
                 archivesX.append(self.N.W1[0][0])
                 archivesY.append(self.N.W1[1][0])
-            moyenne/=len(X)
+            moyenne=self.N.W1[1]/self.N.W1[0]
             moyenne =moyenne.squeeze()
             ord1.append(moyenne)
-        plot(a, ord1)  
-        #scatter(archivesX,archivesY, s=75, c=grad, alpha=.5)
+        
+        #plot(a,ord1)  
+        plot(archivesX,archivesY)
 
-'''
-grad = np.zeros((50,50))
-for i in range(0,50):
+
+grad = np.zeros((100,100))
+for i in range(0,100):
     print(i)
-    for j in range(0,50):            
-            NN=Neural_Network(i/200*2-0.25,j/200*2-0.25)
+    for j in range(0,100):            
+            NN=Neural_Network(i/400*2-0.25,j/400*2-0.25)
             T = trainer(NN)
             grad[i,j]=T.donneGradient(X,Y)
             #print(grad[i,j])
@@ -222,10 +224,10 @@ if __name__=='__main__':
     #Affichage des résultats
 
     NN = Neural_Network()
-    
     T = trainer(NN)
     #T.train(X,Y)
-    T.trainMiniBatch(X,Y,1000)
+    T.trainMiniBatch(X,Y,500)
     print(NN.W1)
     #T = trainer(NN)
     #T.train2(X,Y)
+'''

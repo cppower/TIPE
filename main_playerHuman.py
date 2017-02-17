@@ -1,4 +1,3 @@
-306 lines (284 sloc)  9.84 KB
 from random import *
 from time import time
 from dames import testDFS
@@ -11,6 +10,7 @@ class Plateau:
 		self.damesNoires=dN
 
 INFINI=10**10
+MAX_DEPTH = 4
 	#Déplacements
 cat1 =  [1,2,3,4,5,11,12,13,14,15,21,22,23,24,25,31,32,33,34,35,41,42,43,44,45]
 d1 = [-5,-4,5,6]
@@ -20,14 +20,14 @@ d2 =  [-6,-5,4,5]
 fZone = [1     ,2    , 3   ,4    ,5  ,46  ,  47  ,48    ,49   ,50   ,6   ,16    ,26   ,36    ,15    ,25  ,35  ,45]
 vMove = [[5,6],[5,6],[5,6],[5,6],[5],[-5],[-5,-6],[-5,-6],[-5,-6],[-5,-6],[-5,5],[-5,5],[-5,5],[-5,5],[-5,5],[-5,5],[-5,5],[-5,5]]
 arbre = []
-© Victor Amblard
-history={}
 
+history={}
+MAX_TIME = 4.2
 def minimaxAB(profondeur,nodeId, arbre,alpha,beta,color): #Effectue l'algo minimax + elagage AB  FONCTIONNE CORRECTEMENT
     global hashmap
     global valeurs
     global best_value,best_move
-    if profondeur==4:
+    if (profondeur==MAX_DEPTH and arbre[nodeId][2]=="-") or (profondeur==MAX_DEPTH+2 and arbre[arbre[arbre[nodeId][0]][0]][2]=="x"):
         return arbre[nodeId][7]*color
     val=-INFINI
     for fils in ids:
@@ -37,7 +37,7 @@ def minimaxAB(profondeur,nodeId, arbre,alpha,beta,color): #Effectue l'algo minim
                 val =v
             alpha = max(alpha, v)
             if alpha>=beta:
-				pass
+				pass            	
     if profondeur==1:
         valeurs[nodeId]=val
     return val
@@ -114,9 +114,7 @@ def deplacementsPossibles(origine, plateau, noir): #Function complete
 		dame = False
 		if (not noir and (dB>>origine)%2==1) or (noir and (dN>>origine)%2==1):
 			dame = True
-		if dame:
-			print(dB)
-			print(dN)
+
 		if not dame:
 			if origine in cat1:
 				for deplacement in d1:
@@ -255,33 +253,42 @@ def creeArbre(noir, plateau):
 	global arbreTotal
 	global profondeurs
 	global history
+	d = time()
 	profondeurs = [0 for i in range(0,10)]
 	arbreTotal = {}
 	arbreTotal[0]=(-INFINI,INFINI,"",-INFINI,plateau, not noir, -INFINI,-INFINI)
 
 	ids = [0]
-	for profondeur in range(1,5):
+	deeper = []
+	for profondeur in range(1,MAX_DEPTH+3):
 	    #print("------profondeur--------- "+str(profondeur))
 	    for id in ids:
 	    	if id%10 == profondeur - 1 :
+	    		cur = time()
+	    		if cur-d > MAX_TIME:
+	    			return arbre
 	    		(dep, coup, arr,plateau, noir,evalu,priority) = (arbreTotal.get(id))[1:]
-	    		noir = not noir
-	            if compute_zobrist(plateau) in history:
-					break
-	            arbre= []
-				explore(plateau, noir)
-	    		for elem in arbre:
-	    		    tmpId=randint(0,10**8) 
-		    		while tmpId in ids :
-		    			tmpId=randint(0,10**8)
-	                newId=tmpId-(tmpId%10)+profondeur
-		    		ids.append(newId)
-		    		profondeurs[profondeur]+=1
-		    		arbreTotal[newId] = (id,)+elem
+	    		if id in deeper or profondeur<=MAX_DEPTH:
+					noir = not noir
+					if compute_zobrist(plateau) in history:
+						break
+					arbre= []
+					explore(plateau, noir)
+					for elem in arbre:
+						tmpId=randint(0,10**8) 
+						while tmpId in ids :
+							tmpId=randint(0,10**8)
+						newId=tmpId-(tmpId%10)+profondeur
+						ids.append(newId)
+						profondeurs[profondeur]+=1
+						arbreTotal[newId] = (id,)+elem
+						if (profondeur==MAX_DEPTH and elem[1]=="x") or profondeur > MAX_DEPTH:
+							deeper.append(newId)
+	
 
 	return arbre
 
-#plateau =  Plateau()
+plateau =  Plateau()
 while(True):
 	arbreTotal =  {}
 	priority = 0

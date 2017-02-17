@@ -22,16 +22,18 @@ arbre = []
 #© Victor Amblard
 history={}
 
-def minimaxAB(profondeur,nodeId, arbre,alpha,beta,color): #Effectue l'algo minimax + elagage AB  FONCTIONNE CORRECTEMENT
+def minimaxAB(profondeur,nodeId, arbre,alpha,beta,color,noir): #Effectue l'algo minimax + elagage AB  FONCTIONNE CORRECTEMENT
     global hashmap
     global valeurs
     global best_value,best_move
-    if profondeur==4:
-        return arbre[nodeId][7]*color
+    if profondeur==4 and not noir:
+        return arbre[nodeId][7][1]*color
+	if profondeur==4 and  noir:
+		return arbre[nodeId][7][0]*color
     val=-INFINI
     for fils in ids:
         if fils%10==profondeur+1 and arbre[fils][0]==nodeId:
-            v = -minimaxAB(profondeur+1,fils,arbre,-beta,-alpha, -color)
+            v = -minimaxAB(profondeur+1,fils,arbre,-beta,-alpha, -color,noir)
             if v>val:
                 val =v
             alpha = max(alpha, v)
@@ -42,7 +44,7 @@ def minimaxAB(profondeur,nodeId, arbre,alpha,beta,color): #Effectue l'algo minim
     return val
 def compute_zobrist(plateau): #Fonction de hachage du damier  O(n)
     return int(str(plateau.pionsBlancs)+str(plateau.pionsNoirs)+str(plateau.damesBlanches)+str(plateau.damesNoires))
-def evalue(plateau, noir): #Function complete
+def evalue(plateau, noir, methode=5): #Function complete
 	pB = plateau.pionsBlancs
 	pN = plateau.pionsNoirs
 	dB = plateau.damesBlanches
@@ -50,20 +52,25 @@ def evalue(plateau, noir): #Function complete
 
 	totalB=0
 	totalN=0
-
+	totalB2 = 0
+	totalN2=0
 	for i in range(0, 51):
 		if (pB>>i)%2==1:
 			totalB+=1
+			totalB2+=1
 		elif (pN>>i)%2==1:
 			totalN+=1
+			totalN2+=1
 		elif (dB>>i)%2==1:
 			totalB+=3
+			totalB2+=methode
 		elif (dN>>i)%2==1:
 			totalN+=3
+			totalN2+=methode
 
 	if noir:
-		return totalN-totalB
-	return totalB-totalN
+		return (totalN-totalB, totalN2-totalB2)
+	return (totalB-totalN,totalB2-totalN2)
 
 def explore(plateau,noir): #Function complete
 	CAPTURE=False
@@ -152,7 +159,7 @@ def deplacementsPossibles(origine, plateau, noir): #Function complete
 						cur+=d2[i]
 
 def modifieDamier(origine, coup, arrivee, plateau, noir, dame, chemin = None): #Function complete
-	nPB=	plateau.pionsBlancs
+	nPB=plateau.pionsBlancs
 	nPN = plateau.pionsNoirs
 	nDB = plateau.damesBlanches
 	nDN = plateau.damesNoires
@@ -195,7 +202,7 @@ def modifieDamier(origine, coup, arrivee, plateau, noir, dame, chemin = None): #
 	npla =  Plateau(nPB,nPN,nDB, nDN)
 	return npla
 
-def highestPriority(plateau):
+def highestPriority(plateau,noir):
 	global arbreTotal
 	iMax = 0
 	maxi = -INFINI
@@ -208,7 +215,7 @@ def highestPriority(plateau):
 	if maxi != -INFINI:
 		return iMaxi
 	else:
-		a= minimaxAB(0,0,arbreTotal,-INFINI,INFINI,1)
+		a= minimaxAB(0,0,arbreTotal,-INFINI,INFINI,1,noir)
 		maxi =-INFINI
 		iMax = 0
 		for (key,val) in valeurs.items():
@@ -257,7 +264,8 @@ def creeArbre(noir, plateau):
 	arbreTotal[0]=(-INFINI,INFINI,"",-INFINI,plateau, not noir, -INFINI,-INFINI)
 
 	ids = [0]
-	for profondeur in range(1,5):
+	deb = time()
+	for profondeur in range(1,7):
 	    #print("------profondeur--------- "+str(profondeur))
 	    for id in ids:
 	    	if id%10 == profondeur - 1 :
@@ -275,12 +283,15 @@ def creeArbre(noir, plateau):
 		    		ids.append(newId)
 		    		profondeurs[profondeur]+=1
 		    		arbreTotal[newId] = (id,)+elem
-
+	en=time()
+	delta=en-deb
+	print(delta)
+	#print(len(arbreTotal))
 	return arbre
 iPartie=0
 blancs = 0
 noirs = 0
-while(True):
+for partie in range(0,50):
 	initial = time()
 	plateau =  Plateau()
 	turn = 1
@@ -300,13 +311,13 @@ while(True):
 		#explore(plateau, False)
 		debut = time()
 		creeArbre(False, plateau)
-		bestMove = highestPriority(plateau)
+		bestMove = highestPriority(plateau,False)
 		#print(valeurs)
 		fin =time()
 		if plateau.pionsBlancs|plateau.damesBlanches==0:
 			noirs+=1
 			break
-		print("Coup choisi : "+str(arbreTotal[bestMove][1])+arbreTotal[bestMove][2]+str(arbreTotal[bestMove][3])+" en "+str(fin-debut)+" secondes")
+		#print("Coup choisi : "+str(arbreTotal[bestMove][1])+arbreTotal[bestMove][2]+str(arbreTotal[bestMove][3])+" en "+str(fin-debut)+" secondes")
 		log.write(str(arbreTotal[bestMove][1])+arbreTotal[bestMove][2]+str(arbreTotal[bestMove][3])+" ")
 		logWDetails.write(str(arbreTotal[bestMove][1])+arbreTotal[bestMove][2]+str(arbreTotal[bestMove][3])+" ")
 		logWDetails.write(str(arbreTotal[bestMove][4].pionsBlancs)+" ")
@@ -326,12 +337,12 @@ while(True):
 		history={}
 		priority = 0
 		creeArbre(True, nPlateau)
-		bestMove = highestPriority(nPlateau)
+		bestMove = highestPriority(nPlateau,True)
 		fin =time()
 		if nPlateau.pionsNoirs|nPlateau.damesNoires==0:
 			blancs+=1
 			break
-		print("Coup choisi : "+str(arbreTotal[bestMove][1])+arbreTotal[bestMove][2]+str(arbreTotal[bestMove][3])+" en "+str(fin-debut)+" secondes")
+		#print("Coup choisi : "+str(arbreTotal[bestMove][1])+arbreTotal[bestMove][2]+str(arbreTotal[bestMove][3])+" en "+str(fin-debut)+" secondes")
 		plateau = arbreTotal[bestMove][4] # plateau
 		log.write(str(arbreTotal[bestMove][1])+arbreTotal[bestMove][2]+str(arbreTotal[bestMove][3])+" ")
 		logWDetails.write(str(arbreTotal[bestMove][1])+arbreTotal[bestMove][2]+str(arbreTotal[bestMove][3])+" ")
@@ -349,3 +360,5 @@ while(True):
 	logWDetails.close()
 	iPartie+=1
 		#affichageGUI(plateau.pionsBlancs,plateau.pionsNoirs,plateau.damesBlanches, plateau.damesNoires)
+
+print(noirs-blancs)

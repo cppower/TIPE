@@ -24,7 +24,7 @@ def convertToArray():
     count=0
     file = open('bdd.txt','r')
     lines = file.readlines()
-    X=np.zeros((len(lines),12))
+    X=np.zeros((len(lines),2))
     Y =np.zeros(len(lines))
     print(len(lines))
     j=0
@@ -45,12 +45,12 @@ def convertToArray():
             elif (dN>>i)%2==1:
                 totalN2+=1
         if couleur==1:
-            X[j,10]=totalN-totalB
-            X[j,11]=totalN2-totalB2
+            X[j,0]=totalN-totalB
+            X[j,1]=totalN2-totalB2
         else:
-            X[j,10]=totalB-totalN
-            X[j,11]=totalB2-totalN2
-    
+            X[j,0]=totalB-totalN
+            X[j,1]=totalB2-totalN2
+        '''
         for i in range(0,10): #lignes
             m=0
             for k in range(0,5):
@@ -102,12 +102,12 @@ X,Y = convertToArray()
 
 
 class Neural_Network(object):
-    def __init__(self):        
-        self.inputLayerSize = 12
+    def __init__(self,x,y):        
+        self.inputLayerSize = 2
         self.outputLayerSize = 1
         #Poids Input->Output
-        self.W1 = np.random.randn(self.inputLayerSize,self.outputLayerSize)
-
+        self.W1 = np.array([[x],[y]])
+        
     def sigmoid(self, z):
         return z
     
@@ -160,8 +160,6 @@ class trainer(object):
     def donneGradient(self,X,y):
             tmpW1 =np.zeros((len(self.N.W1),len(self.N.W1[0])))
             for exemple in range(0,len(X)):
-                self.X=X[exemple][np.newaxis]
-                self.y=y[exemple]
                 dJdW1=self.N.costFunctionPrime(self.X,np.array(self.y))
                 dJdW1 = dJdW1.squeeze()
                 for i in range(0,len(self.N.W1)):
@@ -199,33 +197,50 @@ class trainer(object):
                 for i in range(0,len(self.N.W1)):
                     self.N.W1[i]-=tmpW1[i]/lBatch+prev[i]*alpha
                     prev[i]=tmpW1[i]/lBatch
+                grad[int((self.N.W1[0][0]+1)*100)][int((self.N.W1[1][0]+1)*100)]=math.sqrt(tmpW1[0]**2+tmpW1[1]**2)
                 archivesX.append(self.N.W1[0][0])
                 archivesY.append(self.N.W1[1][0])
             moyenne/=len(X)
             moyenne =moyenne.squeeze()
             ord1.append(moyenne)
-        plot(a, ord1)  
+        plot(archivesX, archivesY)  
         #scatter(archivesX,archivesY, s=75, c=grad, alpha=.5)
 
-'''
-grad = np.zeros((50,50))
-for i in range(0,50):
-    print(i)
-    for j in range(0,50):            
-            NN=Neural_Network(i/200*2-0.25,j/200*2-0.25)
+
+grad = np.zeros((100,100))
+for i in range(0,100):
+    for j in range(0,100):
+            NN=Neural_Network(i/100,j/100)
             T = trainer(NN)
             grad[i,j]=T.donneGradient(X,Y)
-            #print(grad[i,j])
 
 '''
 if __name__=='__main__':
     #Affichage des résultats
-
-    NN = Neural_Network()
-    
-    T = trainer(NN)
-    #T.train(X,Y)
-    T.trainMiniBatch(X,Y,1000)
+    for i in range(0,100):
+        NN = Neural_Network()
+        T = trainer(NN)
+        #T.train(X,Y)
+        T.trainMiniBatch(X,Y,50)
+    print(NN.W1)
     print(NN.W1)
     #T = trainer(NN)
     #T.train2(X,Y)
+
+
+result =[]
+xa = [randint(-1,1) for i in range (0,100)]
+ya = [sum(xa)]
+for i in range (0,150
+0):
+        result.append(NN.forward(np.array([xa[i],ya[i]]))[0])
+xi, yi = np.linspace(0,10**10, 150), np.linspace(0,10**10, 150)
+xi, yi = np.meshgrid(xi, yi)
+rbf = Rbf(xa, ya, result, function='linear')
+zi = rbf(xi, yi)
+
+imshow(zi, vmin=np.array(result).min(), vmax=np.array(result).max(), origin='lower',
+           extent=[np.array(xa).min(), np.array(xa).max(), np.array(ya).min(), np.array(ya).max()])
+colorbar()
+show()'''
+
