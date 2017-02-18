@@ -153,7 +153,8 @@ def updateLocalBDD(pionsBlancs, pionsNoirs, damesBlanches, damesNoires,coup,tour
         signe = -1
     if winner=="D":
         signe=0
-	s=str(pionsBlancs)+":"+str(pionsNoirs)+":"+str(damesBlanches)+":"+str(damesNoires)+":"+str(coup)
+	#s=str(pionsBlancs)+":"+str(pionsNoirs)+":"+str(damesBlanches)+":"+str(damesNoires)+":"+str(coup)
+    s=str(pionsBlancs)+":"+str(pionsNoirs)+":"+str(damesBlanches)+":"+str(damesNoires)
     if noir:
        s+=";1"
     else:
@@ -307,9 +308,9 @@ def main(i):
         plateau=joueHumain(a, c, b , plateau, noir)                
         noir = not noir
         #affichageGUI(pionsBlancs, pionsNoirs, damesBlanches,damesNoires)
-    updateGlobalBDD2()
+    updateGlobalBDD()
 
 #216,232
-for iPartie in range(510,560):
+for iPartie in range(300,400):
     main(iPartie)
 
